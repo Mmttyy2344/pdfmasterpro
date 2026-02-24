@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF Master - تبدیل عکس به PDF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0066cc">
+    
+    <!-- فونت فارسی وزیر -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- کتابخانه jspdf برای تبدیل واقعی -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Vazir', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0a1929 0%, #1a2a3a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+            direction: rtl;
+        }
+
+        /* لودینگ جذاب اولیه */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0066cc, #004999);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .splash-screen.hide {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .splash-content {
+            text-align: center;
+            color: white;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .splash-logo {
+            width: 120px;
+            height: 120px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 60px;
+            border: 4px solid rgba(255,255,255,0.5);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .splash-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .splash-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .splash-loader {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .app-card {
+            max-width: 400px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            padding: 24px 20px 20px 20px;
+            position: relative;
+            z-index: 1;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .app-card.show {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, #0066cc, #004999);
+            width: 45px;
+            height: 45px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 10px 20px rgba(0,102,204,0.3);
+            transform: rotate(-5deg);
+            transition: transform 0.3s ease;
+        }
+
+        .logo-icon:hover {
+            transform: rotate(0deg) scale(1.1);
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 20px;
+            background: linear-gradient(135deg, #0066cc, #004999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .menu-btn {
+            background: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 18px;
+            color: #0066cc;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .menu-btn:hover {
+            background: #0066cc;
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .menu-overlay {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 55px;
+            left: 0;
+            width: 200px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            padding: 12px;
+            z-index: 100;
+            display: none;
+            border: 1px solid #eef2f6;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 12px;
+            border-radius: 18px;
+            color: #1e293b;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .menu-item i {
+            color: #0066cc;
+            width: 24px;
+        }
+
+        .menu-item:hover {
+            background: linear-gradient(135deg, #f0f7ff, #e6f0ff);
+            transform: translateX(-5px);
+        }
+
+        .badge {
+            background: #0066cc;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 12px;
+            margin-right: auto;
+        }
+
+        .main-tool {
+            background: linear-gradient(135deg, #f5f9ff, #e8f0fe);
+            border-radius: 30px;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px solid #0066cc;
+            box-shadow: 0 15px 30px rgba(0,102,204,0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .main-tool:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,102,204,0.3);
+        }
+
+        .main-tool-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #0066cc, #004999);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 50px;
+            animation: bounce 2s ease infinite;
+        }
+
+        .main-tool h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+
+        .main-tool p {
+            color: #5e6f88;
+            font-size: 14px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: #0066cc;
+            animation: bounce 2s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .converter-panel {
+            background: white;
+            border-radius: 30px;
+            padding: 22px 18px;
+            border: 1px solid #e2ecf9;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0066cc, #004999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .upload-area {
+            background: #f8fcff;
+            border: 2px dashed #bbd6fb;
+            border-radius: 28px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0,102,204,0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .upload-area:hover::before {
+            opacity: 1;
+        }
+
+        .upload-area:hover {
+            border-color: #0066cc;
+            background: white;
+            transform: scale(1.02);
+        }
+
+        .upload-area i {
+            font-size: 50px;
+            color: #0066cc;
+            margin-bottom: 15px;
+            animation: bounce 2s ease infinite;
+        }
+
+        .upload-text {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .upload-hint {
+            font-size: 13px;
+            color: #778da0;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .preview-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0 15px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f5f9ff;
+            border-radius: 20px;
+        }
+
+        .preview-thumb {
+            width: 80px;
+            height: 80px;
+            border-radius: 18px;
+            background: white;
+            border: 2px solid #d3e3fd;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            animation: scaleIn 0.3s ease;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        .preview-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .remove-preview {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            background: rgba(255, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+        }
+
+        .remove-preview:hover {
+            background: #ff4444;
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px 20px;
+            border-radius: 40px;
+            border: 1px solid #d9e5f0;
+            font-size: 14px;
+            margin: 10px 0 20px;
+            background: #f8fcff;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 0 4px rgba(0,102,204,0.1);
+            background: white;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px 10px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0066cc, #004999);
+            color: white;
+            box-shadow: 0 10px 20px rgba(0,102,204,0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0,102,204,0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #aac3df;
+            cursor: not-allowed;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 2px solid #0066cc;
+            color: #0066cc;
+        }
+
+        .btn-outline:hover {
+            background: #0066cc;
+            color: white;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            display: none;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-actions.show {
+            display: flex;
+        }
+
+        .files-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-height: 450px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+
+        .file-row {
+            background: white;
+            border-radius: 25px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid #e5ecf5;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .file-row:hover {
+            border-color: #0066cc;
+            box-shadow: 0 8px 20px rgba(0,102,204,0.15);
+            transform: scale(1.02);
+        }
+
+        .file-row .icon {
+            background: linear-gradient(135deg, #e1edfe, #cce4ff);
+            width: 55px;
+            height: 55px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0066cc;
+            font-size: 24px;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #1f2a41;
+            font-size: 14px;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: #6f7d98;
+            margin-top: 5px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: white;
+            border: 1px solid #d7e3f0;
+            width: 42px;
+            height: 42px;
+            border-radius: 16px;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: #0066cc;
+            color: white;
+            border-color: #0066cc;
+            transform: scale(1.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #8a9bb5;
+        }
+
+        .empty-state i {
+            font-size: 60px;
+            margin-bottom: 15px;
+            color: #b2c9e8;
+            animation: float 3s ease infinite;
+        }
+
+        .footer-note {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 13px;
+            color: #95aac9;
+            border-top: 1px solid #ecf3fa;
+            padding-top: 20px;
+        }
+
+        /* لودینگ حرفه‌ای */
+        .loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+
+        .loader-content {
+            background: white;
+            padding: 40px;
+            border-radius: 60px;
+            text-align: center;
+            animation: scaleIn 0.5s ease;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+
+        .loader .spinner {
+            width: 70px;
+            height: 70px;
+            border: 5px solid #e2eaf5;
+            border-top: 5px solid #0066cc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .loader .spinner-inner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #0066cc;
+            border-top: 4px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 10px auto;
+        }
+
+        .loader-text {
+            color: #1e293b;
+            font-weight: 600;
+            margin: 15px 0 5px;
+        }
+
+        .loader-progress {
+            width: 200px;
+            height: 6px;
+            background: #e2eaf5;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .loader-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #0066cc, #004999);
+            width: 0%;
+            transition: width 0.3s;
+            animation: progress 2s ease infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .snackbar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 16px 28px;
+            border-radius: 60px;
+            font-size: 14px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 10000;
+            white-space: nowrap;
+            animation: slideUp 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .snackbar i {
+            font-size: 20px;
+        }
+
+        /* اسکرول زیبا */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #0066cc, #004999);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #004999;
+        }
+    </style>
+</head>
+<body>
+
+<!-- صفحه اسپلش جذاب -->
+<div class="splash-screen" id="splashScreen">
+    <div class="splash-content">
+        <div class="splash-logo">
+            <i class="fas fa-file-pdf"></i>
+        </div>
+        <div class="splash-title">PDF Master</div>
+        <div class="splash-subtitle">تبدیل عکس به PDF با کیفیت عالی</div>
+        <div class="splash-loader"></div>
+    </div>
+</div>
+
+<!-- لودینگ حرفه‌ای -->
+<div class="loader" id="loader">
+    <div class="loader-content">
+        <div class="spinner"></div>
+        <div class="loader-text" id="loaderText">در حال پردازش ...</div>
+        <div class="loader-progress">
+            <div class="loader-progress-bar" id="loaderProgress"></div>
+        </div>
+    </div>
+</div>
+
+<!-- پیام کوتاه -->
+<div class="snackbar" id="snackbar">
+    <i class="fas fa-check-circle" style="color: #4caf50;"></i>
+    <span id="snackMsg">انجام شد</span>
+</div>
+
+<!-- کارت اصلی اپ -->
+<div class="app-card" id="appCard">
+
+    <!-- هدر -->
+    <div class="header">
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+            <span class="logo-text">PDF Master</span>
+        </div>
+        <div class="menu-overlay">
+            <button class="menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+            <div class="dropdown-menu" id="dropdownMenu">
+                <div class="menu-item" data-page="home"><i class="fas fa-home"></i> صفحه اصلی</div>
+                <div class="menu-item" data-page="pdfs"><i class="fas fa-file-pdf"></i> پی‌دی‌اف‌های من <span class="badge" id="pdfCount">0</span></div>
+                <div class="menu-item" id="clearAll"><i class="fas fa-trash-alt" style="color:#c00;"></i> حذف همه</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- صفحات -->
+    <div id="homePage" style="display: block;">
+        <!-- ابزار اصلی تبدیل عکس به PDF -->
+        <div class="main-tool" id="mainTool">
+            <div class="main-tool-icon">
+                <i class="fas fa-file-image"></i>
+            </div>
+            <h3>تبدیل عکس به PDF</h3>
+            <p>عکس‌های خود را انتخاب کنید و به PDF تبدیل کنید</p>
+            <i class="fas fa-arrow-down" style="color: #0066cc; margin-top: 15px; font-size: 20px;"></i>
+        </div>
+        
+        <div class="section-title"><i class="fas fa-history"></i> آخرین فایل‌های PDF</div>
+        <div class="files-list" id="recentPdfList"></div>
+    </div>
+
+    <div id="converterPage" style="display: none;">
+        <div class="converter-panel">
+            <div class="panel-title" id="converterTitle">تبدیل عکس به PDF</div>
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <div class="upload-text" id="uploadText">عکس‌ها را انتخاب کنید</div>
+                <div class="upload-hint" id="uploadHint">JPG, PNG, GIF, WEBP</div>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" multiple>
+            <div class="preview-box" id="previewBox"></div>
+
+            <input type="text" class="input-field" id="outputFileName" placeholder="نام فایل خروجی (مثلاً: عکس‌های سفر)">
+
+            <button class="btn btn-primary" id="convertActionBtn"><i class="fas fa-magic"></i> تبدیل به PDF</button>
+
+            <div class="result-actions" id="resultActions">
+                <button class="btn btn-outline" id="downloadBtn"><i class="fas fa-download"></i> دانلود PDF</button>
+                <button class="btn btn-outline" id="viewBtn"><i class="fas fa-eye"></i> مشاهده</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pdfsPage" style="display: none;">
+        <div class="section-title"><i class="fas fa-file-pdf"></i> تمام فایل‌های PDF</div>
+        <div class="files-list" id="pdfListContainer"></div>
+    </div>
+
+    <div class="footer-note">
+        نسخه ۵.۰ · ساخته شده برای ایرانیان
+    </div>
+</div>
+
+<script>
+(function() {
+    // ========== متغیرهای اصلی ==========
+    let pdfFiles = JSON.parse(localStorage.getItem('pdfMaster_pdfs')) || [];
+    let currentTool = 'jpgToPdf';
+    let selectedFiles = [];
+    let lastResult = null;
+
+    // ========== المنت‌ها ==========
+    const splashScreen = document.getElementById('splashScreen');
+    const appCard = document.getElementById('appCard');
+    const loader = document.getElementById('loader');
+    const loaderText = document.getElementById('loaderText');
+    const loaderProgress = document.getElementById('loaderProgress');
+    const snackbar = document.getElementById('snackbar');
+    const snackMsg = document.getElementById('snackMsg');
+    const menuToggle = document.getElementById('menuToggle');
+    const dropdown = document.getElementById('dropdownMenu');
+    const homePage = document.getElementById('homePage');
+    const converterPage = document.getElementById('converterPage');
+    const pdfsPage = document.getElementById('pdfsPage');
+    const pdfCountSpan = document.getElementById('pdfCount');
+    const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const uploadText = document.getElementById('uploadText');
+    const uploadHint = document.getElementById('uploadHint');
+    const previewBox = document.getElementById('previewBox');
+    const converterTitle = document.getElementById('converterTitle');
+    const outputFileName = document.getElementById('outputFileName');
+    const convertBtn = document.getElementById('convertActionBtn');
+    const resultActions = document.getElementById('resultActions');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const viewBtn = document.getElementById('viewBtn');
+    const pdfListContainer = document.getElementById('pdfListContainer');
+    const recentPdfList = document.getElementById('recentPdfList');
+    const mainTool = document.getElementById('mainTool');
+
+    // ========== نمایش اسپلش ==========
+    setTimeout(() => {
+        splashScreen.classList.add('hide');
+        appCard.classList.add('show');
+    }, 2500);
+
+    // ========== توابع کمکی ==========
+    function showLoader(msg = 'در حال پردازش ...') {
+        loaderText.innerText = msg;
+        loader.style.display = 'flex';
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 10;
+            if (progress <= 90) {
+                loaderProgress.style.width = progress + '%';
+            }
+        }, 200);
+        loader.dataset.interval = interval;
+    }
+
+    function hideLoader() {
+        clearInterval(loader.dataset.interval);
+        loader.style.display = 'none';
+        loaderProgress.style.width = '0%';
+    }
+
+    function showSnack(msg, isSuccess = true) {
+        snackMsg.innerText = msg;
+        const icon = document.querySelector('#snackbar i');
+        if (isSuccess) {
+            icon.style.color = '#4caf50';
+            icon.className = 'fas fa-check-circle';
+        } else {
+            icon.style.color = '#f44336';
+            icon.className = 'fas fa-exclamation-circle';
+        }
+        snackbar.style.display = 'flex';
+        setTimeout(() => {
+            snackbar.style.display = 'none';
+        }, 2000);
+    }
+
+    function hideAllPages() {
+        homePage.style.display = 'none';
+        converterPage.style.display = 'none';
+        pdfsPage.style.display = 'none';
+    }
+
+    function showPage(page) {
+        hideAllPages();
+        if (page === 'home') {
+            homePage.style.display = 'block';
+            renderRecentPdfs();
+        }
+        if (page === 'converter') converterPage.style.display = 'block';
+        if (page === 'pdfs') {
+            pdfsPage.style.display = 'block';
+            renderPdfList();
+        }
+        dropdown.classList.remove('show');
+    }
+
+    function updateCounters() {
+        pdfCountSpan.innerText = pdfFiles.length;
+    }
+
+    function savePdfs() {
+        localStorage.setItem('pdfMaster_pdfs', JSON.stringify(pdfFiles));
+        updateCounters();
+        renderRecentPdfs();
+    }
+
+    // ========== تبدیل واقعی عکس به PDF ==========
+    async function convertImagesToPdf(images, fileName) {
+        showLoader('در حال تبدیل عکس به PDF...');
+        
+        try {
+            const { jsPDF } = window.jspdf;
+            
+            // ایجاد PDF با اندازه A4
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'px',
+                format: 'a4'
+            });
+
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+
+            for (let i = 0; i < images.length; i++) {
+                const file = images[i];
+                
+                // به‌روزرسانی پیشرفت
+                loaderText.innerText = `در حال پردازش عکس ${i + 1} از ${images.length}...`;
+                loaderProgress.style.width = ((i + 1) / images.length * 100) + '%';
+
+                // خوندن عکس
+                const imageData = await readImageAsDataURL(file);
+                
+                // ایجاد عنصر img برای دریافت ابعاد
+                const img = new Image();
+                await new Promise((resolve) => {
+                    img.onload = resolve;
+                    img.src = imageData;
+                });
+
+                // محاسبه نسبت ابعاد برای fit در صفحه
+                const imgWidth = img.width;
+                const imgHeight = img.height;
+                const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+                const width = imgWidth * ratio;
+                const height = imgHeight * ratio;
+                const x = (pageWidth - width) / 2;
+                const y = (pageHeight - height) / 2;
+
+                // اضافه کردن صفحه جدید (به جز صفحه اول)
+                if (i > 0) {
+                    pdf.addPage();
+                }
+
+                // اضافه کردن عکس به PDF
+                pdf.addImage(imageData, 'JPEG', x, y, width, height, undefined, 'FAST');
+            }
+
+            // ذخیره PDF
+            const pdfBlob = pdf.output('blob');
+            const url = URL.createObjectURL(pdfBlob);
+            const name = fileName || `PDF_${Date.now()}.pdf`;
+            const size = Math.round(pdfBlob.size / 1024);
+
+            lastResult = { url, name, type: 'pdf', blob: pdfBlob };
+
+            // ذخیره در لیست
+            pdfFiles.unshift({
+                name: name,
+                url: url,
+                date: new Date().toLocaleDateString('fa-IR'),
+                size: size + ' کیلوبایت'
+            });
+            
+            // نگه داشتن فقط 10 فایل آخر
+            if (pdfFiles.length > 10) {
+                const removed = pdfFiles.pop();
+                if (removed.url) URL.revokeObjectURL(removed.url);
+            }
+            
+            savePdfs();
+
+            hideLoader();
+            resultActions.classList.add('show');
+            showSnack('🎉 تبدیل با موفقیت انجام شد!');
+
+        } catch (error) {
+            console.error('Error:', error);
+            hideLoader();
+            showSnack('❌ خطا در تبدیل فایل', false);
+        }
+    }
+
+    function readImageAsDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // ========== باز کردن صفحه تبدیل ==========
+    function openConverter() {
+        selectedFiles = [];
+        previewBox.innerHTML = '';
+        outputFileName.value = '';
+        resultActions.classList.remove('show');
+        uploadText.innerText = 'عکس‌ها را انتخاب کنید';
+        fileInput.value = '';
+        showPage('converter');
+    }
+
+    // ========== مدیریت آپلود فایل ==========
+    uploadArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function(e) {
+        selectedFiles = Array.from(e.target.files);
+        updatePreview();
+    });
+
+    function updatePreview() {
+        if (selectedFiles.length === 0) {
+            uploadText.innerText = 'عکس‌ها را انتخاب کنید';
+            previewBox.innerHTML = '';
+            return;
+        }
+
+        uploadText.innerText = `${selectedFiles.length} عکس انتخاب شد`;
+        previewBox.innerHTML = '';
+
+        selectedFiles.forEach((file, index) => {
+            const div = document.createElement('div');
+            div.className = 'preview-thumb';
+
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                div.innerHTML = `<img src="${ev.target.result}"><button class="remove-preview" data-index="${index}"><i class="fas fa-times"></i></button>`;
+                addRemoveListener(div, index);
+            };
+            reader.readAsDataURL(file);
+
+            previewBox.appendChild(div);
+        });
+    }
+
+    function addRemoveListener(div, index) {
+        const removeBtn = div.querySelector('.remove-preview');
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeFile(index);
+        });
+    }
+
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        updatePreview();
+    }
+
+    // ========== رویدادهای دکمه‌ها ==========
+    mainTool.addEventListener('click', openConverter);
+
+    convertBtn.addEventListener('click', function() {
+        if (selectedFiles.length === 0) {
+            showSnack('لطفاً عکس انتخاب کنید', false);
+            return;
+        }
+
+        const fileName = outputFileName.value.trim() || `عکس‌های_${new Date().toLocaleDateString('fa-IR').replace(/\//g, '_')}.pdf`;
+        convertImagesToPdf(selectedFiles, fileName);
+    });
+
+    downloadBtn.addEventListener('click', function() {
+        if (!lastResult) return;
+        const a = document.createElement('a');
+        a.href = lastResult.url;
+        a.download = lastResult.name;
+        a.click();
+        showSnack('دانلود شروع شد');
+    });
+
+    viewBtn.addEventListener('click', function() {
+        if (!lastResult) return;
+        window.open(lastResult.url, '_blank');
+    });
+
+    // ========== منو ==========
+    menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && !menuToggle.contains(e.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+
+    // ========== آیتم‌های منو ==========
+    document.querySelectorAll('.menu-item[data-page]').forEach(item => {
+        item.addEventListener('click', (e) => {
+            const page = item.dataset.page;
+            showPage(page);
+            dropdown.classList.remove('show');
+        });
+    });
+
+    document.getElementById('clearAll').addEventListener('click', () => {
+        if (confirm('آیا مطمئن هستید؟ همه فایل‌ها پاک می‌شوند.')) {
+            pdfFiles.forEach(f => {
+                if (f.url) URL.revokeObjectURL(f.url);
+            });
+            
+            pdfFiles = [];
+            localStorage.removeItem('pdfMaster_pdfs');
+            updateCounters();
+            renderPdfList();
+            renderRecentPdfs();
+            showSnack('همه فایل‌ها حذف شدند');
+            dropdown.classList.remove('show');
+        }
+    });
+
+    // ========== رندر لیست‌ها ==========
+    function renderRecentPdfs() {
+        const recent = pdfFiles.slice(0, 3);
+        
+        if (recent.length === 0) {
+            recentPdfList.innerHTML = '<div class="empty-state"><i class="fas fa-file-pdf"></i><br>هنوز فایلی ساخته نشده</div>';
+            return;
+        }
+
+        let html = '';
+        recent.forEach((file, index) => {
+            html += `
+                <div class="file-row">
+                    <div class="icon"><i class="fas fa-file-pdf"></i></div>
+                    <div class="file-details">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">${file.date} · ${file.size || '۲۵ کیلوبایت'}</div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="icon-btn" onclick="window.downloadPdf(${index})"><i class="fas fa-download"></i></button>
+                        <button class="icon-btn" onclick="window.viewPdf(${index})"><i class="fas fa-eye"></i></button>
+                        <button class="icon-btn" onclick="window.deletePdf(${index})"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+        recentPdfList.innerHTML = html;
+    }
+
+    function renderPdfList() {
+        if (pdfFiles.length === 0) {
+            pdfListContainer.innerHTML = '<div class="empty-state"><i class="fas fa-file-pdf"></i><br>هنوز فایلی ساخته نشده</div>';
+            return;
+        }
+
+        let html = '';
+        pdfFiles.forEach((file, index) => {
+            html += `
+                <div class="file-row">
+                    <div class="icon"><i class="fas fa-file-pdf"></i></div>
+                    <div class="file-details">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">${file.date} · ${file.size || '۲۵ کیلوبایت'}</div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="icon-btn" onclick="window.downloadPdf(${index})"><i class="fas fa-download"></i></button>
+                        <button class="icon-btn" onclick="window.viewPdf(${index})"><i class="fas fa-eye"></i></button>
+                        <button class="icon-btn" onclick="window.deletePdf(${index})"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+        pdfListContainer.innerHTML = html;
+    }
+
+    // ========== توابع سراسری ==========
+    window.downloadPdf = (index) => {
+        const file = pdfFiles[index];
+        if (!file || !file.url) return;
+        const a = document.createElement('a');
+        a.href = file.url;
+        a.download = file.name;
+        a.click();
+        showSnack('دانلود شروع شد');
+    };
+
+    window.viewPdf = (index) => {
+        const file = pdfFiles[index];
+        if (!file || !file.url) return;
+        window.open(file.url, '_blank');
+    };
+
+    window.deletePdf = (index) => {
+        if (confirm('فایل حذف شود؟')) {
+            if (pdfFiles[index] && pdfFiles[index].url) {
+                URL.revokeObjectURL(pdfFiles[index].url);
+            }
+            pdfFiles.splice(index, 1);
+            savePdfs();
+            renderPdfList();
+            renderRecentPdfs();
+            showSnack('فایل حذف شد');
+        }
+    };
+
+    // ========== مقداردهی اولیه ==========
+    updateCounters();
+    renderRecentPdfs();
+    showPage('home');
+})();
+</script>
+</body>
+</html>
